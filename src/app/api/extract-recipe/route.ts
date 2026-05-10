@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Step 2: Send to Gemini for extraction
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
     const prompt = `${SYSTEM_PROMPT}\n\nPage content from ${url}:\n\n${pageContent}`
 
     const result = await model.generateContent(prompt)
