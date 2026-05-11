@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
       savedAt: new Date().toISOString(),
     }
 
-    saveRecipe(recipe)
+    await saveRecipe(recipe)
 
     return NextResponse.json({ recipe })
 
