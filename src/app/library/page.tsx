@@ -99,7 +99,6 @@ export default function LibraryPage() {
   const filtered = recipes
     .filter(r =>
       r.title?.toLowerCase().includes(search.toLowerCase()) ||
-      r.category?.toLowerCase().includes(search.toLowerCase()) ||
       r.tags?.some(t => t.toLowerCase().includes(search.toLowerCase()))
     )
     .sort((a, b) => sortBy === 'rating' ? (b.rating || 0) - (a.rating || 0) : 0)
