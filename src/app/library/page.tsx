@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Recipe } from '@/lib/types'
 import Badge from '@/components/Badge'
 
@@ -69,21 +70,19 @@ function RecipeTile({ recipe, onDelete }: { recipe: Recipe; onDelete: (id: strin
 }
 
 export default function LibraryPage() {
+  const router = useRouter()
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [sortBy, setSortBy] = useState<'newest' | 'rating'>('newest')
 
-useEffect(() => {
-  const load = () => {
+  useEffect(() => {
+    router.refresh()
     setLoading(true)
     fetch('/api/recipes?t=' + Date.now())
       .then(r => r.json())
       .then(d => { setRecipes(d.recipes); setLoading(false) })
-  }
-  load()
-}, [])
-
+  }, [])
 
   const filtered = recipes
     .filter(r =>
