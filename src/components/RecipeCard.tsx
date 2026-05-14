@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Recipe } from '@/lib/types'
 import Badge from './Badge'
+import StarRating from './StarRating'
 
 function MetaCard({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
@@ -35,6 +36,7 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
             {recipe.description}
           </p>
         )}
+		<StarRating recipeId={recipe.id} initialRating={recipe.rating} />
       </div>
 
       {/* Meta */}
