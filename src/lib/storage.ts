@@ -85,5 +85,6 @@ function rowToRecipe(row: any): Recipe {
     tags: row.tags,
     sourceUrl: row.source_url,
     savedAt: row.saved_at,
+	rating: row.rating || 0,
   }
 }
