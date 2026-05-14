@@ -63,9 +63,9 @@ export default function EditModal({ recipe, onClose, onSave }: Props) {
 
   const [title, setTitle] = useState(recipe.title || '')
   const [description, setDescription] = useState(recipe.description || '')
-  const [prepTime, setPrepTime] = useState(recipe.prepTime || '')
-  const [cookTime, setCookTime] = useState(recipe.cookTime || '')
-  const [totalTime, setTotalTime] = useState(recipe.totalTime || '')
+  const parseMinutes = (v: string) => parseInt(v?.replace(/[^0-9]/g, '')) || 0
+  const [prepMins, setPrepMins] = useState(parseMinutes(recipe.prepTime))
+  const [cookMins, setCookMins] = useState(parseMinutes(recipe.cookTime))
   const [servings, setServings] = useState(recipe.servings || '')
   const [difficulty, setDifficulty] = useState(recipe.difficulty || 'Easy')
   const [ingredients, setIngredients] = useState<Ingredient[]>(recipe.ingredients || [])
@@ -77,7 +77,10 @@ export default function EditModal({ recipe, onClose, onSave }: Props) {
     try {
       const updated: Recipe = {
         ...recipe,
-        title, description, prepTime, cookTime, totalTime,
+        title, description,
+        prepTime: prepMins + ' minutes',
+        cookTime: cookMins + ' minutes',
+        totalTime: (prepMins + cookMins) + ' minutes',
         servings, difficulty, ingredients, instructions,
       }
       const res = await fetch(`/api/recipes/${recipe.id}/edit`, {
@@ -170,19 +173,33 @@ export default function EditModal({ recipe, onClose, onSave }: Props) {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                   <div>
                     <label style={labelStyle}>Prep time</label>
-                    <input value={prepTime} onChange={e => setPrepTime(e.target.value)} placeholder="e.g. 15 minutes" style={inputStyle} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input type="number" min={0} value={prepMins} onChange={e => setPrepMins(parseInt(e.target.value) || 0)}
+                        style={{ ...inputStyle, width: '70px' }} />
+                      <span style={{ fontSize: '13px', color: '#9b8e7a', whiteSpace: 'nowrap', fontFamily: "'DM Sans', sans-serif" }}>min</span>
+                    </div>
                   </div>
                   <div>
                     <label style={labelStyle}>Cook time</label>
-                    <input value={cookTime} onChange={e => setCookTime(e.target.value)} placeholder="e.g. 30 minutes" style={inputStyle} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input type="number" min={0} value={cookMins} onChange={e => setCookMins(parseInt(e.target.value) || 0)}
+                        style={{ ...inputStyle, width: '70px' }} />
+                      <span style={{ fontSize: '13px', color: '#9b8e7a', whiteSpace: 'nowrap', fontFamily: "'DM Sans', sans-serif" }}>min</span>
+                    </div>
                   </div>
                   <div>
                     <label style={labelStyle}>Total time</label>
-                    <input value={totalTime} onChange={e => setTotalTime(e.target.value)} placeholder="e.g. 45 minutes" style={inputStyle} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ ...inputStyle, width: '70px', background: '#f7f3ed', color: '#9b8e7a', textAlign: 'center' as const }}>
+                        {prepMins + cookMins}
+                      </div>
+                      <span style={{ fontSize: '13px', color: '#9b8e7a', whiteSpace: 'nowrap', fontFamily: "'DM Sans', sans-serif" }}>min</span>
+                    </div>
                   </div>
                   <div>
                     <label style={labelStyle}>Servings</label>
-                    <input value={servings} onChange={e => setServings(e.target.value)} placeholder="e.g. 4" style={inputStyle} />
+                    <input type="number" min={1} value={servings} onChange={e => setServings(e.target.value)}
+                      placeholder="4" style={inputStyle} />
                   </div>
                 </div>
                 <div>
