@@ -74,7 +74,7 @@ export default function LibraryPage() {
   const [loading, setLoading] = useState(true)
   const [sortBy, setSortBy] = useState<'newest' | 'rating'>('newest')
 
-  useEffect(() => {
+useEffect(() => {
   const load = () => {
     setLoading(true)
     fetch('/api/recipes?t=' + Date.now())
@@ -82,13 +82,8 @@ export default function LibraryPage() {
       .then(d => { setRecipes(d.recipes); setLoading(false) })
   }
   load()
-  window.addEventListener('focus', load)
-  window.addEventListener('pageshow', load)
-  return () => {
-    window.removeEventListener('focus', load)
-    window.removeEventListener('pageshow', load)
-  }
 }, [])
+
 
   const filtered = recipes
     .filter(r =>
