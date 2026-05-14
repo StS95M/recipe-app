@@ -34,7 +34,7 @@ function RecipeTile({ recipe, onDelete }: { recipe: Recipe; onDelete: (id: strin
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>             {recipe.category && <Badge color="cream">{recipe.category}</Badge>}
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
               {recipe.difficulty && <Badge color="terracotta">{recipe.difficulty}</Badge>}
             </div>
             <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '18px', color: '#2c2416', margin: '0 0 6px', fontWeight: '700', lineHeight: '1.3', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
