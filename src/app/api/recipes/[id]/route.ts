@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { deleteRecipe } from '@/lib/storage'
+import { deleteRecipe, getRecipeById } from '@/lib/storage'
+
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const recipe = await getRecipeById(params.id)
+    if (!recipe) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json({ recipe })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
+}
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   try {

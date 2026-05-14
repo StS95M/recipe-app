@@ -1,12 +1,23 @@
-import { getRecipeById } from '@/lib/storage'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { Recipe } from '@/lib/types'
 import RecipeCard from '@/components/RecipeCard'
-import { notFound } from 'next/navigation'
 
-export const dynamic = 'force-dynamic'
+export default function RecipePage({ params }: { params: { id: string } }) {
+  const [recipe, setRecipe] = useState<Recipe | null>(null)
 
-export default async function RecipePage({ params }: { params: { id: string } }) {
-  const recipe = await getRecipeById(params.id)
-  if (!recipe) notFound()
+  useEffect(() => {
+    fetch(`/api/recipes/${params.id}?t=` + Date.now())
+      .then(r => r.json())
+      .then(d => setRecipe(d.recipe))
+  }, [params.id])
+
+  if (!recipe) return (
+    <div style={{ minHeight: '100vh', background: '#f7f3ed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ color: '#9b8e7a', fontFamily: "'DM Sans', sans-serif" }}>Loading recipe…</p>
+    </div>
+  )
 
   return (
     <div style={{ minHeight: '100vh', background: '#f7f3ed', padding: '36px 16px 80px' }}>
