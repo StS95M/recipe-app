@@ -123,6 +123,7 @@ export default function LibraryPage() {
 		  <option value="rating">Highest rated</option>
 		</select>
       </div>
+	  </div>
 
       {/* Content */}
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
