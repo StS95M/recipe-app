@@ -2,6 +2,8 @@ import { getRecipeById } from '@/lib/storage'
 import RecipeCard from '@/components/RecipeCard'
 import { notFound } from 'next/navigation'
 
+export const dynamic = 'force-dynamic'
+
 export default async function RecipePage({ params }: { params: { id: string } }) {
   const recipe = await getRecipeById(params.id)
   if (!recipe) notFound()
