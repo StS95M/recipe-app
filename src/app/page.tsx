@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Recipe } from '@/lib/types'
 import RecipeCard from '@/components/RecipeCard'
 
@@ -13,7 +12,6 @@ const LOADING_STEPS = [
 ]
 
 export default function HomePage() {
-  const router = useRouter()
   const [url, setUrl] = useState('')
   const [state, setState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [recipe, setRecipe] = useState<Recipe | null>(null)
@@ -40,15 +38,15 @@ export default function HomePage() {
 
       const data = await res.json()
 
-     if (!res.ok) {
-	  if (data.error === 'no_recipe') {
-		setError('This page does not appear to contain a recipe. Please try a different URL.')
-	  } else {
-		throw new Error(data.error || 'Something went wrong')
-	  }
-	  setState('error')
-	  return
-	}
+      if (!res.ok) {
+        if (data.error === 'no_recipe') {
+          setError('This page does not appear to contain a recipe. Please try a different URL.')
+        } else {
+          throw new Error(data.error || 'Something went wrong')
+        }
+        setState('error')
+        return
+      }
 
       setRecipe(data.recipe)
       setState('success')
@@ -73,15 +71,13 @@ export default function HomePage() {
 
       {/* Hero */}
       <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(28px, 5vw, 48px)', color: '#2c2416', margin: '0 0 10px', fontWeight: '700' }}>
-          Save any recipe,<br />from anywhere.
         <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: '500', color: '#b0a090', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '16px' }}>
-		  SAVE A RECIPE
-		</p>
-		<h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(36px, 6vw, 56px)', color: '#2c2416', margin: '0', fontWeight: '300', lineHeight: '1.15' }}>
-		  Paste a URL,<br />
-		  <em style={{ fontStyle: 'italic' }}>we do the rest.</em>
-		</h1>
+          SAVE A RECIPE
+        </p>
+        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(36px, 6vw, 56px)', color: '#2c2416', margin: '0', fontWeight: '300', lineHeight: '1.15' }}>
+          Paste a URL,<br />
+          <em style={{ fontStyle: 'italic' }}>we do the rest.</em>
+        </h1>
       </div>
 
       {/* URL Input */}
@@ -108,9 +104,6 @@ export default function HomePage() {
             {state === 'loading' ? 'Extracting…' : 'Extract Recipe →'}
           </button>
         </div>
-        <p style={{ textAlign: 'center', fontSize: '12px', color: '#b0a090', marginTop: '10px' }}>
-          Works with AllRecipes, BBC Good Food, Serious Eats, Chefkoch, Kochkarussell & more
-        </p>
       </div>
 
       {/* Loading */}
