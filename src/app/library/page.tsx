@@ -70,6 +70,7 @@ export default function LibraryPage() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const [sortBy, setSortBy] = useState<'newest' | 'rating'>('newest')
 
   useEffect(() => {
     fetch('/api/recipes?t=' + Date.now())
@@ -77,11 +78,13 @@ export default function LibraryPage() {
       .then(d => { setRecipes(d.recipes); setLoading(false) })
   }, [])
 
-  const filtered = recipes.filter(r =>
+  const filtered = recipes
+  .filter(r =>
     r.title?.toLowerCase().includes(search.toLowerCase()) ||
     r.category?.toLowerCase().includes(search.toLowerCase()) ||
     r.tags?.some(t => t.toLowerCase().includes(search.toLowerCase()))
   )
+  .sort((a, b) => sortBy === 'rating' ? (b.rating || 0) - (a.rating || 0) : 0)
 
   const handleDelete = (id: string) => setRecipes(prev => prev.filter(r => r.id !== id))
 
@@ -102,6 +105,7 @@ export default function LibraryPage() {
           My Recipe Library
         </h1>
 
+		<div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
         {/* Search */}
         <input
           type="text"
@@ -110,6 +114,14 @@ export default function LibraryPage() {
           placeholder="Search by name, category, or tag…"
           style={{ width: '100%', padding: '12px 16px', fontSize: '14px', border: '1px solid #e8e0d0', borderRadius: '12px', background: '#fff', color: '#2c2416', outline: 'none', fontFamily: "'DM Sans', sans-serif", boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
         />
+		<select
+		  value={sortBy}
+		  onChange={e => setSortBy(e.target.value as 'newest' | 'rating')}
+		  style={{ padding: '12px 16px', fontSize: '13px', border: '1px solid #e8e0d0', borderRadius: '12px', background: '#fff', color: '#6b4423', fontFamily: "'DM Sans', sans-serif", fontWeight: '600', cursor: 'pointer', outline: 'none' }}
+		>
+		  <option value="newest">Newest first</option>
+		  <option value="rating">Highest rated</option>
+		</select>
       </div>
 
       {/* Content */}
