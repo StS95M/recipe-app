@@ -62,7 +62,7 @@ export default function LibraryPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/recipes')
+    fetch('/api/recipes?t=' + Date.now())
       .then(r => r.json())
       .then(d => { setRecipes(d.recipes); setLoading(false) })
   }, [])
