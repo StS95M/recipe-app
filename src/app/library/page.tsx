@@ -62,38 +62,84 @@ function RecipeTile({ recipe, onDelete }: { recipe: Recipe; onDelete: (id: strin
   )
 }
 
-const DDKeys = ['sort', 'time', 'cuisine', 'diet', 'meal', 'rating'] as const
-type DDKey = typeof DDKeys[number]
+// Dropdown that renders at fixed position to escape any overflow clipping
+function FilterDropdown({
+  id, label, active, children
+}: {
+  id: string
+  label: string
+  active: boolean
+  children: React.ReactNode
+}) {
+  const [open, setOpen] = useState(false)
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
 
-function Dropdown({ id, label, icon, children }: { id: DDKey; label: string; icon: string; children: React.ReactNode; }) {
+  const toggle = () => {
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + window.scrollY + 6, left: r.left + window.scrollX })
+    }
+    setOpen(o => !o)
+  }
+
+  useEffect(() => {
+    const close = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest(`[data-dd="${id}"]`)) setOpen(false)
+    }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [id])
+
   return (
-    <div style={{ position: 'relative', flexShrink: 0 }} id={`wrap-${id}`}>
-      <button id={`btn-${id}`} onClick={() => toggleDD(id)} style={{ fontSize: '13px', padding: '0 13px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '5px', height: '34px', whiteSpace: 'nowrap', cursor: 'pointer', border: '1px solid #e8e0d0', background: '#fff', fontFamily: "'DM Sans', sans-serif", color: '#2c2416' }}>
-        <span>{icon}</span> {label} <span style={{ fontSize: '10px', color: '#9b8e7a' }}>▾</span>
+    <div style={{ position: 'relative', flexShrink: 0 }} data-dd={id}>
+      <button
+        ref={btnRef}
+        onClick={toggle}
+        style={{
+          fontSize: '13px', padding: '0 14px', borderRadius: '20px',
+          display: 'flex', alignItems: 'center', gap: '6px', height: '34px',
+          whiteSpace: 'nowrap', cursor: 'pointer',
+          border: active ? '1px solid #6b4423' : '1px solid #e8e0d0',
+          background: active ? '#6b4423' : '#fff',
+          color: active ? '#fff' : '#2c2416',
+          fontFamily: "'DM Sans', sans-serif", fontWeight: 500
+        }}
+      >
+        {label} <span style={{ fontSize: '10px', opacity: 0.7 }}>▾</span>
       </button>
-      <div id={`dd-${id}`} style={{ display: 'none', position: 'absolute', top: '40px', left: 0, background: '#fff', border: '1px solid #e8e0d0', borderRadius: '12px', padding: '6px', zIndex: 50, minWidth: '160px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
-        {children}
-      </div>
+
+      {open && (
+        <div
+          data-dd={id}
+          style={{
+            position: 'absolute',
+            top: '38px',
+            left: 0,
+            background: '#fff',
+            border: '1px solid #e8e0d0',
+            borderRadius: '12px',
+            padding: '6px',
+            zIndex: 99999,
+            minWidth: '180px',
+            boxShadow: '0 12px 40px rgba(0,0,0,0.18)',
+          }}
+        >
+          {children}
+        </div>
+      )}
     </div>
   )
 }
 
-function toggleDD(id: DDKey) {
-  DDKeys.forEach(k => {
-    const el = document.getElementById(`dd-${k}`)
-    if (el) el.style.display = k === id ? (el.style.display === 'none' ? 'block' : 'none') : 'none'
-  })
-}
-
-function closeAllDD() {
-  DDKeys.forEach(k => { const el = document.getElementById(`dd-${k}`); if (el) el.style.display = 'none' })
-}
-
 function DDItem({ label, onClick }: { label: string; onClick: () => void }) {
   return (
-    <div onClick={onClick} style={{ padding: '8px 12px', cursor: 'pointer', borderRadius: '8px', fontSize: '13px', color: '#2c2416', fontFamily: "'DM Sans', sans-serif" }}
+    <div
+      onClick={onClick}
+      style={{ padding: '9px 14px', cursor: 'pointer', borderRadius: '8px', fontSize: '13px', color: '#2c2416', fontFamily: "'DM Sans', sans-serif" }}
       onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = '#faf8f4'}
-      onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}>
+      onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}
+    >
       {label}
     </div>
   )
@@ -133,17 +179,6 @@ export default function LibraryPage() {
     window.addEventListener('focus', onFocus)
     window.addEventListener('pageshow', onFocus)
     return () => { window.removeEventListener('focus', onFocus); window.removeEventListener('pageshow', onFocus) }
-  }, [])
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      const target = e.target as HTMLElement
-      if (!target.closest('[id^="dd-"]') && !target.closest('[id^="btn-"]') && !target.closest('#search-wrap')) {
-        closeAllDD()
-      }
-    }
-    document.addEventListener('click', handler)
-    return () => document.removeEventListener('click', handler)
   }, [])
 
   const activePills: { key: string; label: string }[] = []
@@ -192,24 +227,6 @@ export default function LibraryPage() {
 
   const handleDelete = (id: string) => setRecipes(prev => prev.filter(r => r.id !== id))
 
-  const btnStyle: React.CSSProperties = {
-    fontSize: '13px', padding: '0 13px', borderRadius: '20px',
-    display: 'flex', alignItems: 'center', gap: '5px', height: '34px',
-    whiteSpace: 'nowrap', cursor: 'pointer', border: '1px solid #e8e0d0',
-    background: '#fff', fontFamily: "'DM Sans', sans-serif", color: '#2c2416'
-  }
-
-  const ddStyle: React.CSSProperties = {
-    position: 'absolute', top: '40px', left: 0, background: '#fff',
-    border: '1px solid #e8e0d0', borderRadius: '12px', padding: '6px',
-    zIndex: 50, minWidth: '160px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-  }
-
-  const itemStyle: React.CSSProperties = {
-    padding: '8px 12px', cursor: 'pointer', borderRadius: '8px',
-    fontSize: '13px', color: '#2c2416', fontFamily: "'DM Sans', sans-serif"
-  }
-
   return (
     <div style={{ minHeight: '100vh', background: '#f7f3ed', padding: '36px 16px 80px' }}>
       <nav style={{ maxWidth: '900px', margin: '0 auto 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -224,11 +241,14 @@ export default function LibraryPage() {
           My Recipe Library
         </h1>
 
-        {/* Filter bar */}
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '12px', overflowX: 'auto', paddingBottom: '4px' }}>
+        {/* Filter bar — no overflow:hidden/auto so dropdowns are never clipped */}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap' }}>
 
           {/* Search */}
-          <div id="search-wrap" style={{ position: 'relative', display: 'flex', alignItems: 'center', border: '1px solid #e8e0d0', borderRadius: '20px', background: '#fff', padding: '0 10px', height: '34px', width: searchExpanded ? '200px' : '34px', overflow: 'hidden', transition: 'width 0.3s ease', flexShrink: 0 }}>
+          <div
+            id="search-wrap"
+            style={{ display: 'flex', alignItems: 'center', border: '1px solid #e8e0d0', borderRadius: '20px', background: '#fff', padding: '0 10px', height: '34px', width: searchExpanded ? '200px' : '36px', overflow: 'hidden', transition: 'width 0.3s ease', flexShrink: 0 }}
+          >
             <span onClick={() => { setSearchExpanded(true); setTimeout(() => searchRef.current?.focus(), 50) }} style={{ fontSize: '15px', cursor: 'pointer', flexShrink: 0 }}>🔍</span>
             <input
               ref={searchRef}
@@ -242,80 +262,54 @@ export default function LibraryPage() {
           </div>
 
           {/* Sort */}
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <button id="btn-sort" onClick={() => toggleDD('sort')} style={btnStyle}>
-              ↕ {sortLabel} <span style={{ fontSize: '10px', color: '#9b8e7a' }}>▾</span>
-            </button>
-            <div id="dd-sort" style={{ ...ddStyle, display: 'none' }}>
-              <div style={itemStyle} onClick={() => { setSortBy('date'); setSortLabel('By date'); closeAllDD() }} onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = '#faf8f4'} onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}>By date</div>
-              <div style={itemStyle} onClick={() => { setSortBy('rating'); setSortLabel('By rating'); closeAllDD() }} onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = '#faf8f4'} onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}>By rating</div>
-            </div>
-          </div>
+          <FilterDropdown id="sort" label={`↕ ${sortLabel}`} active={sortBy !== 'date'}>
+            <DDItem label="By date" onClick={() => { setSortBy('date'); setSortLabel('Sort by') }} />
+            <DDItem label="By rating" onClick={() => { setSortBy('rating'); setSortLabel('By rating') }} />
+          </FilterDropdown>
 
           <div style={{ width: '1px', height: '18px', background: '#e8e0d0', flexShrink: 0 }} />
 
           {/* Time */}
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <button id="btn-time" onClick={() => toggleDD('time')} style={{ ...btnStyle, ...(filterTime ? { background: '#6b4423', color: '#fff', borderColor: '#6b4423' } : {}) }}>
-              ⏱ Time <span style={{ fontSize: '10px', opacity: 0.7 }}>▾</span>
-            </button>
-            <div id="dd-time" style={{ ...ddStyle, display: 'none' }}>
-              {['Under 20 min', 'Under 45 min', 'Under 1 hour', '1 hour+'].map(t => (
-                <div key={t} style={itemStyle} onClick={() => { setFilterTime(t); closeAllDD() }} onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = '#faf8f4'} onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}>{t}</div>
-              ))}
-            </div>
-          </div>
+          <FilterDropdown id="time" label="⏱ Time" active={!!filterTime}>
+            {['Under 20 min', 'Under 45 min', 'Under 1 hour', '1 hour+'].map(t => (
+              <DDItem key={t} label={t} onClick={() => setFilterTime(t)} />
+            ))}
+          </FilterDropdown>
 
           {/* Cuisine */}
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <button id="btn-cuisine" onClick={() => toggleDD('cuisine')} style={{ ...btnStyle, ...(filterCuisine ? { background: '#6b4423', color: '#fff', borderColor: '#6b4423' } : {}) }}>
-              🌍 Cuisine <span style={{ fontSize: '10px', opacity: 0.7 }}>▾</span>
-            </button>
-            <div id="dd-cuisine" style={{ ...ddStyle, display: 'none' }}>
-              {['Italian', 'Asian', 'Bavarian', 'Mediterranean', 'French', 'Mexican', 'Other'].map(c => (
-                <div key={c} style={itemStyle} onClick={() => { setFilterCuisine(c); closeAllDD() }} onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = '#faf8f4'} onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}>{c}</div>
-              ))}
-            </div>
-          </div>
+          <FilterDropdown id="cuisine" label="🌍 Cuisine" active={!!filterCuisine}>
+            {['Italian', 'Asian', 'Bavarian', 'Mediterranean', 'French', 'Mexican', 'Other'].map(c => (
+              <DDItem key={c} label={c} onClick={() => setFilterCuisine(c)} />
+            ))}
+          </FilterDropdown>
 
-          {/* Diet */}
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <button id="btn-diet" onClick={() => toggleDD('diet')} style={{ ...btnStyle, ...(filterDiet.length ? { background: '#6b4423', color: '#fff', borderColor: '#6b4423' } : {}) }}>
-              🥗 Diet <span style={{ fontSize: '10px', opacity: 0.7 }}>▾</span>
-            </button>
-            <div id="dd-diet" style={{ ...ddStyle, display: 'none' }}>
-              {['Vegetarian', 'Vegan', 'Gluten-free', 'Dairy-free'].map(d => (
-                <label key={d} style={{ ...itemStyle, display: 'flex', alignItems: 'center', gap: '8px' }} onMouseEnter={e => (e.currentTarget as HTMLLabelElement).style.background = '#faf8f4'} onMouseLeave={e => (e.currentTarget as HTMLLabelElement).style.background = 'transparent'}>
-                  <input type="checkbox" checked={filterDiet.includes(d)} onChange={e => setFilterDiet(prev => e.target.checked ? [...prev, d] : prev.filter(x => x !== d))} />
-                  {d}
-                </label>
-              ))}
-            </div>
-          </div>
+          {/* Diet — multi select */}
+          <FilterDropdown id="diet" label="🥗 Diet" active={filterDiet.length > 0}>
+            {['Vegetarian', 'Vegan', 'Gluten-free', 'Dairy-free'].map(d => (
+              <label key={d} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 14px', cursor: 'pointer', borderRadius: '8px', fontSize: '13px', color: '#2c2416', fontFamily: "'DM Sans', sans-serif" }}
+                onMouseEnter={e => (e.currentTarget as HTMLLabelElement).style.background = '#faf8f4'}
+                onMouseLeave={e => (e.currentTarget as HTMLLabelElement).style.background = 'transparent'}
+              >
+                <input type="checkbox" checked={filterDiet.includes(d)}
+                  onChange={e => setFilterDiet(prev => e.target.checked ? [...prev, d] : prev.filter(x => x !== d))} />
+                {d}
+              </label>
+            ))}
+          </FilterDropdown>
 
           {/* Meal */}
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <button id="btn-meal" onClick={() => toggleDD('meal')} style={{ ...btnStyle, ...(filterMeal ? { background: '#6b4423', color: '#fff', borderColor: '#6b4423' } : {}) }}>
-              🍽️ Meal <span style={{ fontSize: '10px', opacity: 0.7 }}>▾</span>
-            </button>
-            <div id="dd-meal" style={{ ...ddStyle, display: 'none' }}>
-              {['Breakfast', 'Lunch & Dinner', 'Snack', 'Dessert', 'Soup'].map(m => (
-                <div key={m} style={itemStyle} onClick={() => { setFilterMeal(m); closeAllDD() }} onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = '#faf8f4'} onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}>{m}</div>
-              ))}
-            </div>
-          </div>
+          <FilterDropdown id="meal" label="🍽️ Meal" active={!!filterMeal}>
+            {['Breakfast', 'Lunch & Dinner', 'Snack', 'Dessert', 'Soup'].map(m => (
+              <DDItem key={m} label={m} onClick={() => setFilterMeal(m)} />
+            ))}
+          </FilterDropdown>
 
           {/* Rating */}
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <button id="btn-rating" onClick={() => toggleDD('rating')} style={{ ...btnStyle, ...(filterRating ? { background: '#6b4423', color: '#fff', borderColor: '#6b4423' } : {}) }}>
-              ⭐ Rating <span style={{ fontSize: '10px', opacity: 0.7 }}>▾</span>
-            </button>
-            <div id="dd-rating" style={{ ...ddStyle, display: 'none' }}>
-              {[['4+ stars', '⭐⭐⭐⭐ 4+ stars'], ['3+ stars', '⭐⭐⭐ 3+ stars'], ['Unrated', 'Unrated']].map(([val, lbl]) => (
-                <div key={val} style={itemStyle} onClick={() => { setFilterRating(val); closeAllDD() }} onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = '#faf8f4'} onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}>{lbl}</div>
-              ))}
-            </div>
-          </div>
+          <FilterDropdown id="rating" label="⭐ Rating" active={!!filterRating}>
+            <DDItem label="⭐⭐⭐⭐ 4+ stars" onClick={() => setFilterRating('4+ stars')} />
+            <DDItem label="⭐⭐⭐ 3+ stars" onClick={() => setFilterRating('3+ stars')} />
+            <DDItem label="Unrated" onClick={() => setFilterRating('Unrated')} />
+          </FilterDropdown>
 
           {activePills.length > 1 && (
             <button onClick={clearAll} style={{ fontSize: '12px', color: '#9b8e7a', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', whiteSpace: 'nowrap', flexShrink: 0, fontFamily: "'DM Sans', sans-serif" }}>
@@ -336,7 +330,6 @@ export default function LibraryPage() {
           </div>
         )}
 
-        {/* Content */}
         {loading && <p style={{ textAlign: 'center', color: '#9b8e7a', fontFamily: "'DM Sans', sans-serif" }}>Loading your recipes…</p>}
 
         {!loading && recipes.length === 0 && (
