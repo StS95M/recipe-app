@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, useCallback } from 'react'
 import { Recipe } from '@/lib/types'
 import Badge from '@/components/Badge'
 
@@ -70,18 +69,32 @@ function RecipeTile({ recipe, onDelete }: { recipe: Recipe; onDelete: (id: strin
 }
 
 export default function LibraryPage() {
-  const router = useRouter()
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [sortBy, setSortBy] = useState<'newest' | 'rating'>('newest')
+  const [tick, setTick] = useState(0)
 
-  useEffect(() => {
-    router.refresh()
+  const loadRecipes = useCallback(() => {
     setLoading(true)
-    fetch('/api/recipes?t=' + Date.now())
+    fetch('/api/recipes?t=' + Date.now(), { cache: 'no-store' })
       .then(r => r.json())
       .then(d => { setRecipes(d.recipes); setLoading(false) })
+  }, [])
+
+  useEffect(() => {
+    loadRecipes()
+  }, [tick])
+
+  useEffect(() => {
+    const onFocus = () => setTick(t => t + 1)
+    const onShow = () => setTick(t => t + 1)
+    window.addEventListener('focus', onFocus)
+    window.addEventListener('pageshow', onShow)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      window.removeEventListener('pageshow', onShow)
+    }
   }, [])
 
   const filtered = recipes
@@ -123,6 +136,12 @@ export default function LibraryPage() {
             <option value="newest">Newest first</option>
             <option value="rating">Highest rated</option>
           </select>
+          <button
+            onClick={loadRecipes}
+            style={{ padding: '12px 16px', fontSize: '13px', border: '1px solid #e8e0d0', borderRadius: '12px', background: '#fff', color: '#6b4423', fontFamily: "'DM Sans', sans-serif", fontWeight: '600', cursor: 'pointer' }}
+          >
+            ↻ Refresh
+          </button>
         </div>
       </div>
 
