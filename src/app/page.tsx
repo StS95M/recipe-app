@@ -75,10 +75,13 @@ export default function HomePage() {
       <div style={{ textAlign: 'center', marginBottom: '32px' }}>
         <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(28px, 5vw, 48px)', color: '#2c2416', margin: '0 0 10px', fontWeight: '700' }}>
           Save any recipe,<br />from anywhere.
-        </h1>
-        <p style={{ color: '#7a6a52', fontSize: '16px', margin: 0, maxWidth: '420px', marginInline: 'auto', lineHeight: '1.6' }}>
-          Paste a URL — we fetch the page, extract the recipe, and save it to your library automatically.
-        </p>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: '500', color: '#b0a090', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '16px' }}>
+		  SAVE A RECIPE
+		</p>
+		<h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(36px, 6vw, 56px)', color: '#2c2416', margin: '0', fontWeight: '300', lineHeight: '1.15' }}>
+		  Paste a URL,<br />
+		  <em style={{ fontStyle: 'italic' }}>we do the rest.</em>
+		</h1>
       </div>
 
       {/* URL Input */}
