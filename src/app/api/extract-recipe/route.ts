@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { saveRecipe } from '@/lib/storage'
+import { classifyRecipe } from '@/lib/classify'
 import { Recipe } from '@/lib/types'
 import { randomUUID } from 'crypto'
 
@@ -21,7 +22,6 @@ If it DOES contain a recipe, extract it and return ONLY a valid JSON object with
   "totalTime": "45 minutes",
   "servings": "4",
   "difficulty": "Easy",
-  "category": "Dinner",
   "ingredients": [
     { "amount": "2", "unit": "cups", "item": "all-purpose flour" }
   ],
@@ -51,15 +51,13 @@ async function fetchPageContent(url: string): Promise<string> {
   }
 
   const html = await response.text()
-  const text = html
+  return html
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 15000)
-
-  return text
 }
 
 export async function POST(req: NextRequest) {
@@ -78,13 +76,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: err.message || 'Failed to fetch the page' }, { status: 422 })
     }
 
-    // Step 2: Send to Gemini
+    // Step 2: Extract recipe with Gemini
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
-    const prompt = `${SYSTEM_PROMPT}\n\nPage content from ${url}:\n\n${pageContent}`
-    const result = await model.generateContent(prompt)
+    const result = await model.generateContent(`${SYSTEM_PROMPT}\n\nPage content from ${url}:\n\n${pageContent}`)
     const text = result.response.text().trim()
 
-    // Step 3: Parse response
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       return NextResponse.json({ error: 'Could not extract data from this page' }, { status: 422 })
@@ -92,20 +88,33 @@ export async function POST(req: NextRequest) {
 
     const data = JSON.parse(jsonMatch[0])
 
-    // Step 4: Check if it's actually a recipe
     if (!data.isRecipe) {
       return NextResponse.json({ error: 'no_recipe' }, { status: 422 })
     }
 
-    // Step 5: Save to library
+    // Step 3: Build recipe object
     const recipe: Recipe = {
       ...data,
       id: randomUUID(),
       sourceUrl: url,
       savedAt: new Date().toISOString(),
       rating: 0,
+      cuisine: 'Other',
+      diet: [],
+      mealType: 'Lunch & Dinner',
     }
 
+    // Step 4: Classify cuisine, diet, meal type
+    try {
+      const { cuisine, diet, mealType } = await classifyRecipe(recipe)
+      recipe.cuisine = cuisine
+      recipe.diet = diet
+      recipe.mealType = mealType
+    } catch (e) {
+      console.error('Classification error:', e)
+    }
+
+    // Step 5: Save to library
     try {
       await saveRecipe(recipe)
       console.log('Recipe saved successfully:', recipe.id)

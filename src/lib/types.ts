@@ -18,11 +18,13 @@ export interface Recipe {
   totalTime: string
   servings: string
   difficulty: string
-  category: string
   ingredients: Ingredient[]
   instructions: Instruction[]
   tags: string[]
   sourceUrl: string
   savedAt: string
   rating: number
+  cuisine: string
+  diet: string[]
+  mealType: string
 }
