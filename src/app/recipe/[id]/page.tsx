@@ -23,7 +23,7 @@ export default function RecipePage({ params }: { params: { id: string } }) {
     <div style={{ minHeight: '100vh', background: '#f7f3ed', padding: '36px 16px 80px' }}>
       <nav style={{ maxWidth: '680px', margin: '0 auto 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <a href="/" style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', fontWeight: '700', color: '#2c2416', textDecoration: 'none' }}>🍳 RecipeBox</a>
-        <a href="/library" style={{ fontSize: '13px', color: '#6b4423', fontWeight: '600', textDecoration: 'none', background: '#fff', padding: '8px 16px', borderRadius: '20px', border: '1px solid #e8e0d0' }}>
+        <a href="/library" onClick={e => { e.preventDefault(); window.location.assign('/library') }} style={{ fontSize: '13px', color: '#6b4423', fontWeight: '600', textDecoration: 'none', background: '#fff', padding: '8px 16px', borderRadius: '20px', border: '1px solid #e8e0d0' }}>
           ← Library
         </a>
       </nav>
