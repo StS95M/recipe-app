@@ -24,4 +24,5 @@ export interface Recipe {
   tags: string[]
   sourceUrl: string
   savedAt: string
+  rating: number
 }
