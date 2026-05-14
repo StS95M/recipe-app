@@ -4,6 +4,15 @@ import { useEffect, useState } from 'react'
 import { Recipe } from '@/lib/types'
 import Badge from '@/components/Badge'
 
+function Stars({ rating }: { rating: number }) {
+  if (!rating) return null
+  return (
+    <span style={{ fontSize: '13px', letterSpacing: '1px' }}>
+      {'⭐'.repeat(rating)}
+      <span style={{ color: '#b0a090', fontSize: '11px', marginLeft: '4px' }}>{rating}/5</span>
+    </span>
+  )
+}
 function RecipeTile({ recipe, onDelete }: { recipe: Recipe; onDelete: (id: string) => void }) {
   const [deleting, setDeleting] = useState(false)
 
@@ -36,6 +45,7 @@ function RecipeTile({ recipe, onDelete }: { recipe: Recipe; onDelete: (id: strin
             <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#b0a090', fontFamily: "'DM Sans', sans-serif" }}>
               {recipe.totalTime && <span>⏰ {recipe.totalTime}</span>}
               {recipe.servings && <span>🍽️ {recipe.servings} servings</span>}
+			  <Stars rating={recipe.rating} />
             </div>
           </div>
           <button
