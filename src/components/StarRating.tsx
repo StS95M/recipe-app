@@ -9,6 +9,7 @@ interface Props {
 
 export default function StarRating({ recipeId, initialRating }: Props) {
   const [rating, setRating] = useState(initialRating || 0)
+  console.log('StarRating initialRating:', initialRating)
   const [hover, setHover] = useState(0)
   const [saving, setSaving] = useState(false)
 
