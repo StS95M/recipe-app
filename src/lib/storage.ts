@@ -23,9 +23,11 @@ async function ensureTable() {
       instructions JSONB,
       tags JSONB,
       source_url TEXT,
-      saved_at TEXT
+      saved_at TEXT,
+      rating INTEGER DEFAULT 0
     )
   `
+  await db`ALTER TABLE recipes ADD COLUMN IF NOT EXISTS rating INTEGER DEFAULT 0`
 }
 
 export async function getAllRecipes(): Promise<Recipe[]> {
