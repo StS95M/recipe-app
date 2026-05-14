@@ -102,9 +102,15 @@ export async function POST(req: NextRequest) {
       savedAt: new Date().toISOString(),
     }
 
-    await saveRecipe(recipe)
+	try {
+	  await saveRecipe(recipe)
+	  console.log('Recipe saved successfully:', recipe.id)
+	} catch (saveErr: any) {
+	  console.error('SAVE FAILED:', saveErr.message)
+	  return NextResponse.json({ error: 'Recipe extracted but could not be saved: ' + saveErr.message }, { status: 500 })
+	}
 
-    return NextResponse.json({ recipe })
+	return NextResponse.json({ recipe })
 
   } catch (err: any) {
     console.error('Extraction error:', err)
