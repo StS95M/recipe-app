@@ -136,12 +136,6 @@ export default function LibraryPage() {
             <option value="newest">Newest first</option>
             <option value="rating">Highest rated</option>
           </select>
-          <button
-            onClick={loadRecipes}
-            style={{ padding: '12px 16px', fontSize: '13px', border: '1px solid #e8e0d0', borderRadius: '12px', background: '#fff', color: '#6b4423', fontFamily: "'DM Sans', sans-serif", fontWeight: '600', cursor: 'pointer' }}
-          >
-            ↻ Refresh
-          </button>
         </div>
       </div>
 
