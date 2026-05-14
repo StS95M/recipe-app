@@ -40,9 +40,15 @@ export default function HomePage() {
 
       const data = await res.json()
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Something went wrong')
-      }
+     if (!res.ok) {
+	  if (data.error === 'no_recipe') {
+		setError('This page does not appear to contain a recipe. Please try a different URL.')
+	  } else {
+		throw new Error(data.error || 'Something went wrong')
+	  }
+	  setState('error')
+	  return
+	}
 
       setRecipe(data.recipe)
       setState('success')

@@ -6,10 +6,14 @@ import { randomUUID } from 'crypto'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
-const SYSTEM_PROMPT = `You are a recipe extraction expert. You will be given the raw HTML/text content of a recipe webpage.
-Extract the recipe and return ONLY a valid JSON object with this exact structure — no markdown, no explanation, just the raw JSON:
+const SYSTEM_PROMPT = `You are a recipe extraction expert. You will be given the raw text content of a webpage.
 
+First, determine if the page contains a recipe. If it does NOT contain a recipe, return exactly this JSON:
+{"isRecipe": false}
+
+If it DOES contain a recipe, extract it and return ONLY a valid JSON object with this structure:
 {
+  "isRecipe": true,
   "title": "Recipe name",
   "description": "Short 1-2 sentence description of the dish",
   "prepTime": "15 minutes",
@@ -29,20 +33,17 @@ Extract the recipe and return ONLY a valid JSON object with this exact structure
 
 Rules:
 - difficulty must be one of: Easy, Medium, Hard
-- If a field is not found, use an empty string "" or empty array []
-- amounts should be numbers or fractions as strings e.g. "1", "1/2", "2.5"
-- units examples: cups, tbsp, tsp, g, kg, ml, l, oz, lb, pinch, or "" for countable items
+- If a field is not found, use an empty string or empty array
 - Return ONLY the JSON object, nothing else`
 
 async function fetchPageContent(url: string): Promise<string> {
   const response = await fetch(url, {
     headers: {
-      // Pretend to be a regular browser so recipe sites don't block us
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       'Accept-Language': 'en-US,en;q=0.5',
     },
-    signal: AbortSignal.timeout(15000) // 15 second timeout
+    signal: AbortSignal.timeout(15000)
   })
 
   if (!response.ok) {
@@ -50,15 +51,13 @@ async function fetchPageContent(url: string): Promise<string> {
   }
 
   const html = await response.text()
-
-  // Strip HTML tags and clean up whitespace to reduce token usage
   const text = html
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, 15000) // Keep first 15k chars — enough for any recipe
+    .slice(0, 15000)
 
   return text
 }
@@ -79,38 +78,43 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: err.message || 'Failed to fetch the page' }, { status: 422 })
     }
 
-    // Step 2: Send to Gemini for extraction
+    // Step 2: Send to Gemini
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
     const prompt = `${SYSTEM_PROMPT}\n\nPage content from ${url}:\n\n${pageContent}`
-
     const result = await model.generateContent(prompt)
     const text = result.response.text().trim()
 
-    // Step 3: Parse the JSON response
+    // Step 3: Parse response
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
-      return NextResponse.json({ error: 'Could not extract recipe data from this page' }, { status: 422 })
+      return NextResponse.json({ error: 'Could not extract data from this page' }, { status: 422 })
     }
 
-    const recipeData = JSON.parse(jsonMatch[0])
+    const data = JSON.parse(jsonMatch[0])
 
-    // Step 4: Save to our library
+    // Step 4: Check if it's actually a recipe
+    if (!data.isRecipe) {
+      return NextResponse.json({ error: 'no_recipe' }, { status: 422 })
+    }
+
+    // Step 5: Save to library
     const recipe: Recipe = {
-      ...recipeData,
+      ...data,
       id: randomUUID(),
       sourceUrl: url,
       savedAt: new Date().toISOString(),
+      rating: 0,
     }
 
-	try {
-	  await saveRecipe(recipe)
-	  console.log('Recipe saved successfully:', recipe.id)
-	} catch (saveErr: any) {
-	  console.error('SAVE FAILED:', saveErr.message)
-	  return NextResponse.json({ error: 'Recipe extracted but could not be saved: ' + saveErr.message }, { status: 500 })
-	}
+    try {
+      await saveRecipe(recipe)
+      console.log('Recipe saved successfully:', recipe.id)
+    } catch (saveErr: any) {
+      console.error('SAVE FAILED:', saveErr.message)
+      return NextResponse.json({ error: 'Recipe extracted but could not be saved: ' + saveErr.message }, { status: 500 })
+    }
 
-	return NextResponse.json({ recipe })
+    return NextResponse.json({ recipe })
 
   } catch (err: any) {
     console.error('Extraction error:', err)
